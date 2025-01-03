@@ -1,0 +1,164 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-waf
+  namespace: nginx-ingress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-ingress
+  template:
+    metadata:
+      labels:
+        app: nginx-ingress
+        app.kubernetes.io/name: nginx-ingress
+     #annotations:
+       #prometheus.io/scrape: "true"
+       #prometheus.io/port: "9113"
+       #prometheus.io/scheme: http
+    spec:
+      serviceAccountName: nginx-ingress
+      automountServiceAccountToken: true
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+#      volumes:
+#      - name: nginx-etc
+#        emptyDir: {}
+#      - name: nginx-cache
+#        emptyDir: {}
+#      - name: nginx-lib
+#        emptyDir: {}
+#      - name: nginx-log
+#        emptyDir: {}
+      imagePullSecrets:
+      - name: docker-secret  # 컨테이너 레지스트리 접근을 위한 Secret 설정
+      containers:
+      - image: YOUR_REGISRTY:npic-waf-3.7.0 # NGINX Plus Ingress Controller 이미지 설정
+        imagePullPolicy: IfNotPresent
+        name: nginx-plus-ingress
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        - name: readiness-port
+          containerPort: 8081
+        - name: prometheus
+          containerPort: 9113
+        - name: service-insight
+          containerPort: 9114
+        readinessProbe:
+          httpGet:
+            path: /nginx-ready
+            port: readiness-port
+          periodSeconds: 1
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+         #limits:
+         #  cpu: "1"
+         #  memory: "1Gi"
+        securityContext:
+          allowPrivilegeEscalation: false
+#          readOnlyRootFilesystem: true
+          runAsUser: 101 #nginx
+          runAsNonRoot: true
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+#        volumeMounts:
+#        - mountPath: /etc/nginx
+#          name: nginx-etc
+#        - mountPath: /var/cache/nginx
+#          name: nginx-cache
+#        - mountPath: /var/lib/nginx
+#          name: nginx-lib
+#        - mountPath: /var/log/nginx
+#          name: nginx-log
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        args:
+          - -nginx-plus
+          - -nginx-configmaps=$(POD_NAMESPACE)/nginx-config
+          - -enable-app-protect
+         #- -report-ingress-status
+         #- -external-service=nginx-ingress
+         #- -default-server-tls-secret=$(POD_NAMESPACE)/default-server-secret
+         #- -enable-cert-manager
+         #- -enable-external-dns
+         #- -enable-app-protect-dos
+         #- -v=3 # Enables extensive logging. Useful for troubleshooting.
+         #- -enable-prometheus-metrics
+         #- -enable-service-insight
+         #- -global-configuration=$(POD_NAMESPACE)/nginx-configuration 
+        volumeMounts:
+        - name: app-protect-bd-config
+          mountPath: /opt/app_protect/bd_config
+        - name: app-protect-config
+          mountPath: /opt/app_protect/config
+        - name: app-protect-bundles
+          mountPath: /etc/app_protect/bundles
+      - name: waf-enforcer
+        image: YOUR_REGISRTY:waf-enforcer-5.3.0 # NGINX App Protect WAF enforcer 이미지 설정
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: ENFORCER_PORT
+            value: "50000"
+        volumeMounts:
+          - name: app-protect-bd-config
+            mountPath: /opt/app_protect/bd_config
+      - name: waf-config-mgr
+        image: YOUR_REGISRTY:waf-config-mgr-5.3.0 # NGINX App Protect WAF config-mgr 이미지 설정
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - all
+        volumeMounts:
+        - name: app-protect-bd-config
+          mountPath: /opt/app_protect/bd_config
+        - name: app-protect-config
+          mountPath: /opt/app_protect/config
+        - name: app-protect-bundles
+          mountPath: /etc/app_protect/bundles
+      volumes:
+      - name: app-protect-bd-config
+        persistentVolumeClaim:
+          claimName: waf-bd-conf-pvc
+      - name: app-protect-config
+        persistentVolumeClaim:
+          claimName: waf-conf-pvc
+      - name: app-protect-bundles
+        persistentVolumeClaim:
+          claimName: waf-bundle-pvc
+    
+
+#      initContainers:
+#      - image: nginx/nginx-ingress:3.7.0
+#        imagePullPolicy: IfNotPresent
+#        name: init-nginx-ingress
+#        command: ['cp', '-vdR', '/etc/nginx/.', '/mnt/etc']
+#        securityContext:
+#          allowPrivilegeEscalation: false
+#          readOnlyRootFilesystem: true
+#          runAsUser: 101 #nginx
+#          runAsNonRoot: true
+#          capabilities:
+#            drop:
+#            - ALL
+#        volumeMounts:
+#        - mountPath: /mnt/etc
+#          name: nginx-etc

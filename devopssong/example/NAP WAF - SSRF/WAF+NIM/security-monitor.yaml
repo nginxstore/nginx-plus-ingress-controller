@@ -1,0 +1,12 @@
+apiVersion: k8s.nginx.org/v1
+kind: Policy
+metadata:
+  name: monitor-policy
+spec:
+  waf:
+    enable: true
+    apBundle: "ssrf_policy.tgz"
+    securityLogs:
+    - enable: true
+      apLogBundle: "log_sm.tgz"
+      logDest: "syslog:server=127.0.0.1:1514"

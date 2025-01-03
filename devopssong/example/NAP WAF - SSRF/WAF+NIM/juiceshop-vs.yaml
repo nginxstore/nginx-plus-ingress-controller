@@ -1,0 +1,16 @@
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: juiceshop
+spec:
+  host: juiceshop.example.com
+  policies:
+  - name: monitor-policy
+  upstreams:
+  - name: juiceshop
+    service: juiceshop-svc
+    port: 80
+  routes:
+  - path: /
+    action:
+      pass: juiceshop

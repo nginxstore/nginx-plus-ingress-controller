@@ -1,0 +1,32 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: agent-config
+  namespace: nginx-ingress
+data:
+  nginx-agent.conf: |-
+    log:
+      level: error
+      path: ""
+    server:
+      host: "<FQDN or IP address of NGINX Instance Manager>"  # 구성된 NGINX Instance Manager에 맞춰 변경
+      grpcPort: 443
+    tls:
+      enable: true
+      skip_verify: true
+    features:
+    - registration
+    - nginx-counting
+    - metrics-sender
+    - dataplane-status
+    extensions:
+    - nginx-app-protect
+    - nap-monitoring
+    nginx_app_protect:
+      report_interval: 15s
+      precompiled_publication: true
+    nap_monitoring:
+      collector_buffer_size: 20000
+      processor_buffer_size: 20000
+      syslog_ip: "127.0.0.1"
+      syslog_port: 1514
