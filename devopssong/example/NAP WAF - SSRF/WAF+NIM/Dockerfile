@@ -1,4 +1,4 @@
-FROM YOUR_REGISRTY:npic-waf-3.7.0
+FROM YOUR_REGISRTY:npic-3.7.0
 
 USER root
 
