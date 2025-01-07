@@ -22,7 +22,7 @@ spec:
       imagePullSecrets:
       - name: docker-secret  # 컨테이너 레지스트리 접근을 위한 Secret 설정
       containers:
-      - image: YOUR_REGISRTY:npic-3.7.0 # NGINX Plus Ingress Controller 이미지 설정
+      - image: YOUR_REGISRTY:npic-waf-3.7.0 # NGINX Plus Ingress Controller 이미지 설정
         imagePullPolicy: IfNotPresent
         name: nginx-plus-ingress
         ports:
