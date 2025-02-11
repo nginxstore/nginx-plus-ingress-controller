@@ -1,0 +1,19 @@
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: keycloak-vs
+  namespace: keycloak
+spec:
+  host: <YOUR-KEYCLOAK-DOMAIN>
+  tls:
+    secret: <YOUR-TLS-SECRET>
+    redirect:
+      enable: true
+  upstreams:
+    - name: keycloak
+      service: keycloak-svc
+      port: 8080
+  routes:
+    - path: /
+      action:
+        pass: keycloak
