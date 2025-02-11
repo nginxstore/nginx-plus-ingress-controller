@@ -1,0 +1,13 @@
+apiVersion: k8s.nginx.org/v1
+kind: Policy
+metadata:
+  name: oidc-policy
+  namespace: app
+spec:
+  oidc:
+    clientID: nginx-ingress
+    clientSecret: oidc-secret
+    authEndpoint: https://<YOUR-DOMAIN>/realms/<YOUR-REALM>/protocol/openid-connect/auth
+    tokenEndpoint: https://<YOUR-DOMAIN>/realms/<YOUR-REALM>/protocol/openid-connect/token
+    jwksURI: https://<YOUR-DOMAIN>/realms/<YOUR-REALM>/protocol/openid-connect/certs
+    endSessionEndpoint: https://<YOUR-DOMAIN>/realms/<YOUR-REALM>/protocol/openid-connect/logout
