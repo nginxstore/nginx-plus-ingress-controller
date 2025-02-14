@@ -1,0 +1,6 @@
+flask==2.3.3
+werkzeug==2.3.7
+pyjwt[crypto]==2.3.0
+requests==2.31.0
+cachetools==4.2.2
+cryptography==41.0.1
