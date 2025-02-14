@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oidc-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oidc-backend
+  template:
+    metadata:
+      labels:
+        app: oidc-backend
+    spec:
+      containers:
+      - name: oidc-backend
+        image: yjsitian/public:oidc-backend-2.4
+        ports:
+        - containerPort: 5000
+        env:
+        - name: KEYCLOAK_PUBLIC_KEY_URL
+          value: "https://<YOUR-DOMAIN>/realms/<YOUR-REALM>/protocol/openid-connect/certs"  # Keycloak 공개 키 URL
+        - name: KEYCLOAK_CLIENT_ID
+          value: "nginx-ingress"  # Keycloak 클라이언트 ID

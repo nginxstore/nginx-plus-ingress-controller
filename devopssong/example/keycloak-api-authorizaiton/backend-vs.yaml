@@ -1,0 +1,19 @@
+apiVersion: k8s.nginx.org/v1
+kind: VirtualServer
+metadata:
+  name: backend-vs
+  namespace: app
+spec:
+  host: <YOUR-DOMAIN>
+  tls:
+    secret: <YOUR-TLS-SECRET>
+  upstreams:
+    - name: backend
+      service: oidc-backend-svc
+      port: 80
+  routes:
+    - path: /
+      policies:
+        - name: oidc-policy
+      action:
+        pass: backend
